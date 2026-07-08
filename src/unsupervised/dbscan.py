@@ -6,11 +6,11 @@ class DBSCAN:
     def __init__(self, eps: float, min_samples: int) -> None:
         self.eps = eps
         self.min_samples = min_samples
-
         self.labels_: npt.NDArray[np.integer[Any]] | None = None
         self.core_sample_indices_: npt.NDArray[np.integer[Any]] | None = None
         self.n_clusters_: int | None = None
         self.n_features_in_: int | None = None
+        
     def fit(self, X: np.ndarray) -> "DBSCAN":
         X = np.asarray(X, dtype=float)
         if X.ndim != 2:
@@ -21,11 +21,9 @@ class DBSCAN:
             raise ValueError("min_samples must be positive")
         n_samples, n_features = X.shape
         self.n_features_in_ = n_features
-
         labels = np.full(n_samples, -1, dtype=int)
         visited = np.zeros(n_samples, dtype=bool)
         is_core = np.zeros(n_samples, dtype=bool)
-
         cluster_id = 0
         for i in range(n_samples):
             if visited[i]:
@@ -50,14 +48,13 @@ class DBSCAN:
         self.labels_ = labels
         self.core_sample_indices_ = np.where(is_core)[0]
         self.n_clusters_ = cluster_id
-
         return self
 
     def _region_query(self, X: np.ndarray, index: int) -> list[int]:
         distances = np.linalg.norm(X - X[index], axis=1)
         neighbors = np.where(distances <= self.eps)[0]
-
         return [int(i) for i in neighbors]
+        
     def _expand_cluster(
         self,
         X: np.ndarray,
@@ -82,7 +79,6 @@ class DBSCAN:
                             neighbor_set.add(point)
             if labels[j] == -1:
                 labels[j] = cluster_id
-
             p += 1
 
     def fit_predict(self, X: np.ndarray) -> np.ndarray:
