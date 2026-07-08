@@ -1,9 +1,4 @@
-import sys, os
 import numpy as np
-
-main_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(main_dir)
-
 from sklearn.metrics import (
     accuracy_score,
     confusion_matrix as sk_confusion_matrix,
