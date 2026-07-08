@@ -4,7 +4,6 @@ import numpy as np
 main_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(main_dir)
 
-
 from sklearn.metrics import (
     accuracy_score,
     confusion_matrix as sk_confusion_matrix,
@@ -18,7 +17,6 @@ from src.metrics.evaluation import (
     confusion_matrix,
     auc_roc,
 )
-
 
 def test_accuracy():
     np.random.seed(42)
@@ -52,7 +50,6 @@ def test_f1_multiclass():
     scratch = f1_score(y_true, y_pred, mean="macro")
     sklearn = sk_f1_score(y_true, y_pred, average="macro")
     assert np.isclose(scratch, sklearn)
-
 
 def test_confusion_matrix():
     np.random.seed(42)
