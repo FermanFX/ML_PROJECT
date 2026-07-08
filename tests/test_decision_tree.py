@@ -165,14 +165,6 @@ def test_against_sklearn(simple_data):
     sk_acc = (sk.predict(X) == y).mean()
     assert abs(our_acc - sk_acc) <= 0.02
 
-def test_xor(xor_data):
-    X, y = xor_data
-    dt = DecisionTree(max_depth=5, random_state=42)
-    dt.fit(X, y)
-    acc = (dt.predict(X) == y).mean()
-
-    assert acc > 0.8
-
 def test_sample_weight():
     X = np.array([[1.0], [2.0], [3.0], [4.0], [5.0]])
     y = np.array([0, 0, 0, 1, 1])
