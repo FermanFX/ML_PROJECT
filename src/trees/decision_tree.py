@@ -114,9 +114,9 @@ class DecisionTree:
         n_features = X.shape[1]
         features = self._feature_subset(n_features)
         parent_impurity = self._impurity(sample_weight, y, total_weight)
-        best_gain = -np.inf
-        best_feature = None
-        best_threshold = None
+        best_gain: float = -np.inf
+        best_feature: Optional[int] = None
+        best_threshold: Optional[float] = None
 
         for f_idx in features:
             col = X[:, f_idx]
@@ -157,9 +157,9 @@ class DecisionTree:
                     best_feature = f_idx
                     best_threshold = (sorted_col[i] + sorted_col[i + 1]) * 0.5
 
-        if best_feature is None or best_gain <= 0.0:
+        if (best_feature is None or best_threshold is None or best_gain <= 0.0):
             return None
-        return best_feature, best_threshold, best_gain
+        return int(best_feature), float(best_threshold), float(best_gain)
 
     def _feature_subset(self, n_features: int) -> list:
         assert self._rng is not None
