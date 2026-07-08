@@ -29,7 +29,7 @@ def test_accuracy():
     sklearn = accuracy_score(y_true, y_pred)
     assert np.isclose(scratch, sklearn)
 
-def test_f1_binary():
+def test_f1_macro_binary_dataset():
     np.random.seed(42)
     n = 300
     y_true = np.random.randint(0, 2, size=n)
@@ -38,6 +38,17 @@ def test_f1_binary():
     y_pred[noise] = 1 - y_pred[noise]
     scratch = f1_score(y_true, y_pred, mean="macro")
     sklearn = sk_f1_score(y_true, y_pred, average="macro")
+    assert np.isclose(scratch, sklearn)
+
+def test_f1_binary():
+    np.random.seed(42)
+    n = 300
+    y_true = np.random.randint(0, 2, size=n)
+    y_pred = y_true.copy()
+    noise = np.random.rand(n) < 0.2
+    y_pred[noise] = 1 - y_pred[noise]
+    scratch = f1_score(y_true, y_pred, mean="binary")
+    sklearn = sk_f1_score(y_true, y_pred, average="binary")
     assert np.isclose(scratch, sklearn)
 
 def test_f1_multiclass():
