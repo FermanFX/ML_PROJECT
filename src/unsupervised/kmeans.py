@@ -12,11 +12,11 @@ class KMeans:
         self.tol = tol
         self.random_state = random_state
 
-        self.centroids_ = None
-        self.labels_ = None
-        self.inertia_ = None
-        self.n_iter_ = None
-        self.n_features_in_ = None
+        self.centroids_: np.ndarray | None = None
+        self.labels_: np.ndarray | None = None
+        self.inertia_: float | None = None
+        self.n_iter_: int | None = None
+        self.n_features_in_: int | None = None
 
     def fit(self, X: np.ndarray) -> "KMeans":
         X = np.asarray(X, dtype=float)
@@ -44,6 +44,8 @@ class KMeans:
 
         indices = rng.choice(n_samples, self.n_clusters, replace=False)
         centroids = X[indices].copy()
+
+        iteration = 0
 
         for iteration in range(self.max_iter):
             distances = np.sum((X[:, None, :] - centroids[None, :, :]) ** 2, axis=2)
@@ -81,6 +83,9 @@ class KMeans:
         if self.centroids_ is None:
             raise ValueError("fit first")
 
+        if self.n_features_in_ is None:
+            raise ValueError("fit first")
+
         X = np.asarray(X, dtype=float)
 
         if X.ndim != 2:
@@ -89,9 +94,14 @@ class KMeans:
         if X.shape[1] != self.n_features_in_:
             raise ValueError("X has wrong number of features")
 
-        distances = np.sum((X[:, None, :] - self.centroids_[None, :, :]) ** 2, axis=2)
+        centroids = self.centroids_
+
+        distances = np.sum((X[:, None, :] - centroids[None, :, :]) ** 2, axis=2)
         return np.argmin(distances, axis=1)
 
     def fit_predict(self, X: np.ndarray) -> np.ndarray:
         self.fit(X)
+
+        assert self.labels_ is not None
+
         return self.labels_
