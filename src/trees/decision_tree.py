@@ -242,7 +242,12 @@ class DecisionTree:
             total = val.sum()
             probs = val / total if total > 0 else val
             counts_str = ", ".join(f"{int(v)}" for v in val)
-            return f"{indent}[{counts_str}]  samples={node['samples']}\n"
+            probs_str = ", ".join(f"{p:.2f}" for p in probs)
+            return (
+                f"{indent}[{counts_str}] "
+                f"probs=[{probs_str}] "
+                f"samples={node['samples']}\n"
+            )
         feat = node["feature_index"]
         thresh = node["threshold"]
         result = f"{indent}feature_{feat} <= {thresh:.4f}\n"
