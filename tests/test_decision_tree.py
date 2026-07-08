@@ -1,3 +1,4 @@
+# Tests – placeholder stub
 import numpy as np
 import pytest
 from sklearn.tree import DecisionTreeClassifier
@@ -164,6 +165,37 @@ def test_against_sklearn(simple_data):
     our_acc = (ours.predict(X) == y).mean()
     sk_acc = (sk.predict(X) == y).mean()
     assert abs(our_acc - sk_acc) <= 0.02
+
+def test_depth_against_sklearn():
+    rng = np.random.RandomState(42)
+    X = rng.randn(200, 4)
+    y = (X[:, 0] + X[:, 1] > 0).astype(int)
+    ours = DecisionTree(max_depth=4, random_state=42)
+    ours.fit(X, y)
+    sk = DecisionTreeClassifier(max_depth=4, random_state=42)
+    sk.fit(X, y)
+    assert abs(ours.depth - sk.get_depth()) <= 1
+
+def test_feature_importances_against_sklearn():
+    rng = np.random.RandomState(42)
+    X = rng.randn(300, 5)
+    y = (X[:, 0] + X[:, 1] > 0).astype(int)
+    ours = DecisionTree(random_state=42)
+    ours.fit(X, y)
+    sk = DecisionTreeClassifier(random_state=42)
+    sk.fit(X, y)
+    np.testing.assert_allclose(
+        np.round(ours.feature_importances(), 5),
+        np.round(sk.feature_importances_, 5),
+        atol=0.02,
+    )
+
+def test_xor(xor_data):
+    X, y = xor_data
+    dt = DecisionTree(max_depth=5, random_state=42)
+    dt.fit(X, y)
+    acc = (dt.predict(X) == y).mean()
+    assert acc > 0.8
 
 def test_sample_weight():
     X = np.array([[1.0], [2.0], [3.0], [4.0], [5.0]])
