@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from sklearn.datasets import make_classification
 
-from src.bagging.random_forest import RandomForestClassifier
+from src.tree.bagging.random_forest import RandomForestClassifier
 
 
 # ==========================================================
