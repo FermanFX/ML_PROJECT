@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from numpy.typing import NDArray
 
-from utils.unsupervised_helper import (
+from src.utils.unsupervised_helper import (
     _prepare_unsupervised_data,
     pca_task,
     kmeans_task,
