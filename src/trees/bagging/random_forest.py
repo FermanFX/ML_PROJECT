@@ -6,11 +6,10 @@ from typing import List, Optional, Tuple, Union
 import numpy as np
 from numpy.typing import NDArray
 
-from src.decision_tree import DecisionTree
+from src.trees.decision_tree import DecisionTree
 
 # Constant used only to build a reproducible per-tree seed stream.
 _SEED_UPPER_BOUND = 2**31 - 1
-
 
 def _fit_one_tree(
     args: Tuple[
