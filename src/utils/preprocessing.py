@@ -12,7 +12,6 @@ def optimize_dataframe_memory(df, exclude_cols=None, verbose=True):
         exclude_cols = []
 
     mem_before = df.memory_usage(deep=True).sum() / 1024**2
-    total_reduction = 0
 
     for col in df.columns:
         if col in exclude_cols:
