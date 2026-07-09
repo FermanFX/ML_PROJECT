@@ -11,6 +11,8 @@ class DecisionTree:
         max_features: Optional[Union[int, str]] = None,
         random_state: Optional[int] = None,
     ) -> None:
+        if criterion not in ("gini", "entropy"):
+            raise ValueError("criterion must be 'gini' or 'entropy'")
         self.max_depth = max_depth
         self.min_samples_split = min_samples_split
         self.criterion = criterion
@@ -31,24 +33,37 @@ class DecisionTree:
         y: np.ndarray,
         sample_weight: Optional[np.ndarray] = None,
     ) -> DecisionTree:
+        X = np.asarray(X)
+        y = np.asarray(y)
+        if X.ndim != 2:
+            raise ValueError("X must be a 2D array")
+        if y.ndim != 1:
+            raise ValueError("y must be a 1D array")
+        if X.shape[0] != y.shape[0]:
+            raise ValueError("X and y must have the same number of samples")
+        if X.shape[0] == 0:
+            raise ValueError("X and y must not be empty")
         self.classes_ = np.unique(y)
         assert self.classes_ is not None
-
         self.n_classes_ = len(self.classes_)
         self.n_features_ = X.shape[1]
-
         self._rng = np.random.RandomState(self.random_state)
-
         self._depth = 0
         self._n_leaves = 0
-
         self._impurity_reductions = np.zeros(
             self.n_features_,
             dtype=np.float64,
         )
-
         if sample_weight is None:
             sample_weight = np.ones(X.shape[0], dtype=np.float64)
+        else:
+            sample_weight = np.asarray(sample_weight, dtype=np.float64)
+            if sample_weight.ndim != 1:
+                raise ValueError("sample_weight must be a 1D array")
+            if len(sample_weight) != len(y):
+                raise ValueError("sample_weight must have the same length as y")
+            if np.any(sample_weight < 0):
+                raise ValueError("sample_weight must be non-negative")
         self.tree_ = self._grow(X, y, sample_weight, depth=0)
         return self
 
@@ -166,6 +181,10 @@ class DecisionTree:
         if self.max_features is None:
             return list(range(n_features))
         if isinstance(self.max_features, int):
+            if self.max_features <= 0 or self.max_features > n_features:
+                raise ValueError(
+                    f"max_features must be in (0, {n_features}], got {self.max_features}"
+                )
             k = min(self.max_features, n_features)
             return self._rng.choice(n_features, k, replace=False).tolist()
         if isinstance(self.max_features, str):
@@ -208,6 +227,8 @@ class DecisionTree:
         return 0.0
 
     def predict(self, X: np.ndarray) -> np.ndarray:
+        if self.tree_ is None:
+            raise ValueError("The decision tree has not been fitted yet.")
         return np.array([self._predict_row(x) for x in X])
 
     def _predict_row(self, x: np.ndarray) -> int:
@@ -222,10 +243,13 @@ class DecisionTree:
         return int(self.classes_[np.argmax(node["value"])])
 
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
+        if self.tree_ is None:
+            raise ValueError("The decision tree has not been fitted yet.")
         return np.array([self._predict_proba_row(x) for x in X])
 
     def _predict_proba_row(self, x: np.ndarray) -> np.ndarray:
-        assert self.tree_ is not None
+        if self.tree_ is None:
+            raise ValueError("The decision tree has not been fitted yet.")
         node = self.tree_
         while "feature_index" in node:
             if x[node["feature_index"]] <= node["threshold"]:
@@ -246,7 +270,8 @@ class DecisionTree:
         return self._n_leaves
 
     def feature_importances(self) -> np.ndarray:
-        assert self._impurity_reductions is not None
+        if self._impurity_reductions is None:
+            raise ValueError("The decision tree has not been fitted yet.")
         total = self._impurity_reductions.sum()
         if total == 0:
             return np.zeros(self.n_features_)
@@ -283,7 +308,6 @@ class DecisionTree:
     def __repr__(self) -> str:
         if self.tree_ is None:
             return "DecisionTree (not fitted)"
-        assert self.tree_ is not None
         if self._depth > 4:
             return (
                 f"DecisionTree(depth={self._depth}, n_leaves={self._n_leaves}, "
