@@ -4,7 +4,7 @@ from src.trees.decision_tree import DecisionTree
 from src.trees.bagging.random_forest import RandomForestClassifier
 from src.trees.boosting.adaboost import AdaBoostClassifier
 from sklearn.model_selection import StratifiedKFold
-
+from src.metrics.evaluation import accuracy_calculation, f1_score, auc_roc
 
 @pytest.fixture
 def binary_dataset():
@@ -43,8 +43,6 @@ def multiclass_dataset():
 
     return X, y
 
-
-from src.metrics.evaluation import accuracy_calculation, f1_score, auc_roc
 
 
 def test_accuracy():
