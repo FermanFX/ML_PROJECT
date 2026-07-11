@@ -1,10 +1,8 @@
 from __future__ import annotations
-from typing import Optional
-
+from typing import Any, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-
 from src.metrics.evaluation import accuracy_calculation
 from src.trees.bagging.random_forest import RandomForestClassifier
 from src.trees.boosting.adaboost import AdaBoostClassifier
@@ -33,9 +31,9 @@ def generate_bootstrap_sample(
             return X_bootstrap, y_bootstrap
 
 def get_positive_class_probabilities(
-    model,
+    model: Any,
     X: np.ndarray,
-    positive_class,
+    positive_class: Any,
 ) -> np.ndarray:
     probabilities = np.asarray(
         model.predict_proba(X),
@@ -43,8 +41,11 @@ def get_positive_class_probabilities(
     )
 
     classes = np.asarray(model.classes_)
+
     positive_index = int(
-        np.flatnonzero(classes == positive_class)[0]
+        np.flatnonzero(
+            classes == positive_class
+        )[0]
     )
 
     return probabilities[:, positive_index]
@@ -91,17 +92,20 @@ def calculate_bias_variance(
         )
     )
 
+    bias_plus_variance = (
+        bias_squared + variance
+    )
+
     return {
         "bias_squared": bias_squared,
         "variance": variance,
         "total_error": total_error,
         "bias_plus_variance": (
-            bias_squared + variance
+            bias_plus_variance
         ),
         "difference": abs(
             total_error
-            - bias_squared
-            - variance
+            - bias_plus_variance
         ),
     }
 
@@ -142,19 +146,21 @@ def run_bias_variance_experiment(
         y_test == positive_class
     ).astype(np.float64)
 
-    ada_probabilities = []
-    rf_probabilities = []
+    ada_probabilities: list[np.ndarray] = []
+    rf_probabilities: list[np.ndarray] = []
 
-    ada_accuracies = []
-    rf_accuracies = []
+    ada_accuracies: list[float] = []
+    rf_accuracies: list[float] = []
 
     for bootstrap_id in range(n_bootstrap):
         seed = random_state + bootstrap_id
 
-        X_bootstrap, y_bootstrap = generate_bootstrap_sample(
-            X_train,
-            y_train,
-            seed,
+        X_bootstrap, y_bootstrap = (
+            generate_bootstrap_sample(
+                X_train,
+                y_train,
+                seed,
+            )
         )
 
         adaboost = AdaBoostClassifier(
@@ -210,47 +216,58 @@ def run_bias_variance_experiment(
             rf_probability
         )
 
-        ada_prediction = adaboost.predict(X_test)
-        rf_prediction = random_forest.predict(X_test)
+        ada_prediction = adaboost.predict(
+            X_test
+        )
+
+        rf_prediction = random_forest.predict(
+            X_test
+        )
 
         ada_accuracies.append(
-            accuracy_calculation(
-                y_test,
-                ada_prediction,
+            float(
+                accuracy_calculation(
+                    y_test,
+                    ada_prediction,
+                )
             )
         )
 
         rf_accuracies.append(
-            accuracy_calculation(
-                y_test,
-                rf_prediction,
+            float(
+                accuracy_calculation(
+                    y_test,
+                    rf_prediction,
+                )
             )
         )
 
-    ada_probabilities = np.asarray(
-        ada_probabilities
+    ada_probabilities_array = np.asarray(
+        ada_probabilities,
+        dtype=np.float64,
     )
 
-    rf_probabilities = np.asarray(
-        rf_probabilities
+    rf_probabilities_array = np.asarray(
+        rf_probabilities,
+        dtype=np.float64,
     )
 
     ada_result = calculate_bias_variance(
-        ada_probabilities,
+        ada_probabilities_array,
         y_test_binary,
     )
 
     rf_result = calculate_bias_variance(
-        rf_probabilities,
+        rf_probabilities_array,
         y_test_binary,
     )
 
     ada_mean_probability = (
-        ada_probabilities.mean(axis=0)
+        ada_probabilities_array.mean(axis=0)
     )
 
     rf_mean_probability = (
-        rf_probabilities.mean(axis=0)
+        rf_probabilities_array.mean(axis=0)
     )
 
     ada_ensemble_prediction = np.where(
@@ -289,7 +306,7 @@ def run_bias_variance_experiment(
                 "mean_accuracy": float(
                     np.mean(ada_accuracies)
                 ),
-                "ensemble_accuracy": (
+                "ensemble_accuracy": float(
                     accuracy_calculation(
                         y_test,
                         ada_ensemble_prediction,
@@ -318,7 +335,7 @@ def run_bias_variance_experiment(
                 "mean_accuracy": float(
                     np.mean(rf_accuracies)
                 ),
-                "ensemble_accuracy": (
+                "ensemble_accuracy": float(
                     accuracy_calculation(
                         y_test,
                         rf_ensemble_prediction,
@@ -341,10 +358,7 @@ def plot_bias_variance(
         figsize=(8, 5),
     )
 
-    plt.title(
-        "Bias² and Variance"
-    )
-
+    plt.title("Bias² and Variance")
     plt.xlabel("Model")
     plt.ylabel("Error")
     plt.xticks(rotation=0)
