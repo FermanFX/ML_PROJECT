@@ -1,7 +1,6 @@
 # === 1. IMPORTS & SETUP ===
 import os
 import sys
-from collections import defaultdict
 from pathlib import Path
 
 import matplotlib
@@ -15,25 +14,23 @@ from sklearn.model_selection import StratifiedKFold
 # Path Ayarları
 project_root = Path.cwd().parent
 sys.path.insert(0, str(project_root))
-sys.path.insert(0, os.path.join(os.getcwd(), ".."))
 
 # Custom Modul Importları
 from src.metrics.evaluation import accuracy_calculation, auc_roc, f1_score
-from src.trees.decision_tree import DecisionTree
 from src.trees.bagging.random_forest import RandomForestClassifier
-from src.trees.boosting.adaboost import AdaBoostClassifier, DecisionStump
+from src.trees.boosting.adaboost import AdaBoostClassifier
+from src.trees.decision_tree import DecisionTree
 from src.utils.preprocessing import (
     load_adult_income_data,
     load_breast_cancer,
     load_covertype_data,
     load_mnist_data,
-    standardize,
-    train_test_split,
 )
 
 # Konfiqurasiya
 RANDOM_STATE = 42
 np.random.seed(RANDOM_STATE)
+
 matplotlib.rcParams["figure.dpi"] = 120
 os.makedirs("../figures", exist_ok=True)
 
