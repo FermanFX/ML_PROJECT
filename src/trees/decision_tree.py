@@ -43,17 +43,15 @@ class DecisionTree:
             raise ValueError("X and y must have the same number of samples")
         if X.shape[0] == 0:
             raise ValueError("X and y must not be empty")
+
         self.classes_ = np.unique(y)
-        assert self.classes_ is not None
         self.n_classes_ = len(self.classes_)
         self.n_features_ = X.shape[1]
         self._rng = np.random.RandomState(self.random_state)
         self._depth = 0
         self._n_leaves = 0
-        self._impurity_reductions = np.zeros(
-            self.n_features_,
-            dtype=np.float64,
-        )
+        self._impurity_reductions = np.zeros(self.n_features_, dtype=np.float64)
+
         if sample_weight is None:
             sample_weight = np.ones(X.shape[0], dtype=np.float64)
         else:
@@ -64,6 +62,7 @@ class DecisionTree:
                 raise ValueError("sample_weight must have the same length as y")
             if np.any(sample_weight < 0):
                 raise ValueError("sample_weight must be non-negative")
+
         self.tree_ = self._grow(X, y, sample_weight, depth=0)
         return self
 
@@ -76,14 +75,19 @@ class DecisionTree:
     ) -> dict[str, Any]:
         assert self.classes_ is not None
         assert self._impurity_reductions is not None
-        node: dict = {}
+
+        node: dict[str, Any] = {}
         n_samples = X.shape[0]
         total_weight = sample_weight.sum()
-        class_counts = np.array([
-            sample_weight[y == c].sum() for c in self.classes_
-        ], dtype=np.float64)
+        class_counts = np.array(
+            [sample_weight[y == c].sum() for c in self.classes_],
+            dtype=np.float64,
+        )
+
         node["samples"] = n_samples
         node["value"] = class_counts
+        node["impurity"] = self._impurity_from_counts(class_counts, total_weight)
+
         if depth > self._depth:
             self._depth = depth
         pure = len(np.unique(y)) == 1
@@ -101,13 +105,16 @@ class DecisionTree:
         if best is None:
             self._n_leaves += 1
             return node
+
         feature_idx, threshold, gain = best
         left_mask = X[:, feature_idx] <= threshold
         right_mask = ~left_mask
+
         if left_mask.sum() == 0 or right_mask.sum() == 0:
             self._n_leaves += 1
             return node
-        self._impurity_reductions[feature_idx] += gain * n_samples
+
+        self._impurity_reductions[feature_idx] += gain * total_weight
         node["feature_index"] = int(feature_idx)
         node["threshold"] = float(threshold)
         node["left"] = self._grow(
@@ -124,8 +131,9 @@ class DecisionTree:
         y: np.ndarray,
         sample_weight: np.ndarray,
         total_weight: float,
-) -> Optional[tuple[int, float, float]]:
+    ) -> Optional[tuple[int, float, float]]:
         assert self.classes_ is not None
+
         n_features = X.shape[1]
         features = self._feature_subset(n_features)
         parent_impurity = self._impurity(sample_weight, y, total_weight)
@@ -140,6 +148,7 @@ class DecisionTree:
             sorted_y = y[order]
             sorted_w = sample_weight[order]
             n = len(sorted_col)
+
             class_indices = np.searchsorted(self.classes_, sorted_y)
             total_class_counts = np.bincount(
                 class_indices,
@@ -154,11 +163,14 @@ class DecisionTree:
                 class_idx = class_indices[i]
                 left_w_sum += sorted_w[i]
                 left_counts[class_idx] += sorted_w[i]
+
                 if sorted_col[i] == sorted_col[i + 1]:
                     continue
+
                 right_w_sum = total_weight - left_w_sum
                 if left_w_sum <= 0.0 or right_w_sum <= 0.0:
                     continue
+
                 right_counts = total_class_counts - left_counts
                 gain = (
                     parent_impurity
@@ -172,12 +184,14 @@ class DecisionTree:
                     best_feature = f_idx
                     best_threshold = (sorted_col[i] + sorted_col[i + 1]) * 0.5
 
-        if (best_feature is None or best_threshold is None or best_gain <= 0.0):
+        if best_feature is None or best_threshold is None or best_gain <= 0.0:
             return None
+
         return int(best_feature), float(best_threshold), float(best_gain)
 
-    def _feature_subset(self, n_features: int) -> list:
+    def _feature_subset(self, n_features: int) -> list[int]:
         assert self._rng is not None
+
         if self.max_features is None:
             return list(range(n_features))
         if isinstance(self.max_features, int):
@@ -185,16 +199,21 @@ class DecisionTree:
                 raise ValueError(
                     f"max_features must be in (0, {n_features}], got {self.max_features}"
                 )
-            k = min(self.max_features, n_features)
-            return self._rng.choice(n_features, k, replace=False).tolist()
+            return self._rng.choice(
+                n_features, self.max_features, replace=False
+            ).tolist()
+
         if isinstance(self.max_features, str):
             if self.max_features == "sqrt":
                 k = max(1, int(np.sqrt(n_features)))
             elif self.max_features == "log2":
                 k = max(1, int(np.log2(n_features)))
             else:
-                k = n_features
+                raise ValueError(
+                    "max_features must be an integer, 'sqrt', 'log2', or None"
+                )
             return self._rng.choice(n_features, k, replace=False).tolist()
+
         return list(range(n_features))
 
     def _impurity(
@@ -204,11 +223,14 @@ class DecisionTree:
         total_weight: float,
     ) -> float:
         assert self.classes_ is not None
+
         if total_weight == 0:
             return 0.0
-        class_counts = np.array([
-            sample_weight[y == c].sum() for c in self.classes_
-        ], dtype=np.float64)
+
+        class_counts = np.array(
+            [sample_weight[y == c].sum() for c in self.classes_],
+            dtype=np.float64,
+        )
         return self._impurity_from_counts(class_counts, total_weight)
 
     def _impurity_from_counts(
@@ -218,29 +240,32 @@ class DecisionTree:
     ) -> float:
         if total_weight == 0:
             return 0.0
+
         probs = class_counts / total_weight
+
         if self.criterion == "gini":
-            return float(1.0 - np.sum(probs ** 2))
-        if self.criterion == "entropy":
-            eps = 1e-12
-            return float(-np.sum(probs * np.log2(probs + eps)))
-        return 0.0
+            return float(1.0 - np.sum(probs**2))
+
+        eps = 1e-12
+        return float(-np.sum(probs * np.log2(probs + eps)))
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         if self.tree_ is None:
             raise ValueError("The decision tree has not been fitted yet.")
         return np.array([self._predict_row(x) for x in X])
 
-    def _predict_row(self, x: np.ndarray) -> int:
+    def _predict_row(self, x: np.ndarray) -> Any:
         assert self.tree_ is not None
         assert self.classes_ is not None
+
         node = self.tree_
         while "feature_index" in node:
             if x[node["feature_index"]] <= node["threshold"]:
                 node = node["left"]
             else:
                 node = node["right"]
-        return int(self.classes_[np.argmax(node["value"])])
+
+        return self.classes_[np.argmax(node["value"])]
 
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
         if self.tree_ is None:
@@ -250,15 +275,18 @@ class DecisionTree:
     def _predict_proba_row(self, x: np.ndarray) -> np.ndarray:
         if self.tree_ is None:
             raise ValueError("The decision tree has not been fitted yet.")
+
         node = self.tree_
         while "feature_index" in node:
             if x[node["feature_index"]] <= node["threshold"]:
                 node = node["left"]
             else:
                 node = node["right"]
+
         total = node["value"].sum()
         if total == 0:
             return np.ones(self.n_classes_) / self.n_classes_
+
         return node["value"] / total
 
     @property
@@ -277,34 +305,31 @@ class DecisionTree:
             return np.zeros(self.n_features_)
         return self._impurity_reductions / total
 
-    def _repr_tree(self, node: dict, depth: int = 0, prefix: str = "") -> str:
-        indent = prefix
+    def _repr_tree(self, node: dict[str, Any], depth: int = 0, prefix: str = "") -> str:
+        val = node["value"]
+        counts_str = ", ".join(f"{v:.2f}" for v in val)
         if "feature_index" not in node:
-            val = node["value"]
             total = val.sum()
             probs = val / total if total > 0 else val
-            counts_str = ", ".join(f"{int(v)}" for v in val)
             probs_str = ", ".join(f"{p:.2f}" for p in probs)
             return (
-                f"{indent}[{counts_str}] "
-                f"probs=[{probs_str}] "
-                f"samples={node['samples']}\n"
+                f"{prefix}leaf: {self.criterion}={node['impurity']:.4f}, "
+                f"samples={node['samples']}, value=[{counts_str}], "
+                f"probs=[{probs_str}]\n"
             )
         feat = node["feature_index"]
         thresh = node["threshold"]
-        result = f"{indent}feature_{feat} <= {thresh:.4f}\n"
+        result = (
+            f"{prefix}feature_{feat} <= {thresh:.4f}, "
+            f"{self.criterion}={node['impurity']:.4f}, "
+            f"samples={node['samples']}, value=[{counts_str}]\n"
+        )
         new_prefix = prefix + "|   "
         if depth < 4:
             result += self._repr_tree(node["left"], depth + 1, new_prefix)
             result += self._repr_tree(node["right"], depth + 1, new_prefix)
-        else:
-            for side, child in [("left", node["left"]), ("right", node["right"])]:
-                val = child["value"]
-                total = val.sum()
-                counts_str = ", ".join(f"{int(v)}" for v in val)
-                result += f"{new_prefix}[{counts_str}]  samples={child['samples']}\n"
         return result
-
+    
     def __repr__(self) -> str:
         if self.tree_ is None:
             return "DecisionTree (not fitted)"
