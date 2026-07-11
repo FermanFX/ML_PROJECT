@@ -240,7 +240,12 @@ def load_adult_income_data(drop_categorical=True, optimize_memory=True, verbose=
         X = adult.data.features
         y = adult.data.targets
 
-        y.loc[:, 'income'] = y['income'].str.replace('.', '', regex=False)
+        # Ensure y is a Series (not a DataFrame)
+        if isinstance(y, pd.DataFrame):
+            y = y.iloc[:, 0]  # Extract the first (and only) column as Series
+
+        # Remove dots from income values (e.g., '<=50K.' -> '<=50K')
+        y = y.str.replace('.', '', regex=False)
 
         if drop_categorical:
             cols_to_drop = [
@@ -272,6 +277,10 @@ def load_covertype_data(drop_categorical=True, optimize_memory=True, verbose=Tru
         covertype = fetch_ucirepo(id=31)
         X = covertype.data.features
         y = covertype.data.targets
+
+        # Ensure y is a Series (not a DataFrame)
+        if isinstance(y, pd.DataFrame):
+            y = y.iloc[:, 0]  # Extract the first (and only) column as Series
 
         if drop_categorical:
             X = X[X.columns.drop(list(X.filter(regex='Wilderness_Area')))]
@@ -306,6 +315,9 @@ def load_mnist_data(optimize_memory=True, verbose=True, return_numpy=False):
             data_home='./mnist_cache',
             n_retries=5
         )
+        # Ensure y is a Series with proper dtype
+        if isinstance(y, pd.DataFrame):
+            y = y.iloc[:, 0]
         y = y.astype(int)
 
         df_temp = pd.DataFrame(
