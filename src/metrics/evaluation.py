@@ -87,42 +87,44 @@ def confusion_matrix(y_true, y_pred):
         matrix[i, j] += 1
     return matrix
 
-def auc_roc(y_true, y_score):
-    """
-    Compute ROC AUC for binary classification.
-
-    Parameters
-    ----------
-    y_true : np.ndarray
-        Binary labels (0/1).
-    y_score : np.ndarray
-        Predicted probabilities for positive class.
-
-    Returns
-    -------
-    float
-        ROC AUC score.
-    """
+def _binary_auc(y_true: np.ndarray, y_score: np.ndarray) -> float:
     y_true = np.asarray(y_true)
     y_score = np.asarray(y_score)
-    order = np.argsort(-y_score)
-    y_true = y_true[order]
-    positives = np.sum(y_true == 1)
-    negatives = np.sum(y_true == 0)
-    if positives == 0 or negatives == 0:
-        raise ValueError("Both classes must exist.")
-    tpr = [0.0]
-    fpr = [0.0]
-    tp = 0
-    fp = 0
-    for label in y_true:
-        if label == 1:
-            tp += 1
-        else:
-            fp += 1
-        tpr.append(tp / positives)
-        fpr.append(fp / negatives)
-    tpr.append(1.0)
-    fpr.append(1.0)
-    auc = np.trapezoid(tpr, fpr)
-    return auc
+    pos = y_true == 1
+    neg = y_true == 0
+    n_pos = np.sum(pos)
+    n_neg = np.sum(neg)
+    if n_pos == 0 or n_neg == 0:
+        raise ValueError("Both positive and negative samples are required.")
+    # Stable sort
+    order = np.argsort(y_score, kind="mergesort")
+    scores = y_score[order]
+    # Average ranks for tied scores
+    ranks = np.empty(len(scores), dtype=float)
+    i = 0
+    while i < len(scores):
+        j = i + 1
+        while j < len(scores) and scores[j] == scores[i]:
+            j += 1
+        avg_rank = (i + j - 1) / 2 + 1
+        ranks[i:j] = avg_rank
+        i = j
+    final_ranks = np.empty_like(ranks)
+    final_ranks[order] = ranks
+    sum_pos = np.sum(final_ranks[pos])
+    auc = (sum_pos - n_pos * (n_pos + 1) / 2) / (n_pos * n_neg)
+    return float(auc)
+
+def auc_roc(y_true: np.ndarray, y_pred_proba: np.ndarray) -> float:
+    y_true = np.asarray(y_true)
+    y_pred_proba = np.asarray(y_pred_proba)
+    if y_pred_proba.ndim == 1:
+        return _binary_auc(y_true, y_pred_proba)
+    if y_pred_proba.shape[1] == 2:
+        return _binary_auc(y_true, y_pred_proba[:, 1])
+    classes = np.unique(y_true)
+    aucs = []
+    for i, cls in enumerate(classes):
+        binary_true = (y_true == cls).astype(int)
+        aucs.append(_binary_auc(binary_true, y_pred_proba[:, i]))
+    return float(np.mean(aucs))
