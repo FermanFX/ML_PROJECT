@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 # === 1. IMPORTS & SETUP ===
 import os
 import sys
