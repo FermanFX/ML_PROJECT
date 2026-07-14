@@ -1,4 +1,4 @@
-# ruff: noqa: E402, F811
+# ruff: noqa: E402
 import re
 import sys
 from pathlib import Path
@@ -30,7 +30,7 @@ from src.utils.preprocessing import (
 )
 matplotlib.use("Agg")
 
-def load_datasets():# noqa: F811
+def load_datasets_experiment():
     X_bc, y_bc = load_breast_cancer_data()
     X_adult, y_adult = load_adult_income_data()
     X_cover, y_cover = load_covertype_data()
@@ -59,7 +59,7 @@ FIGURES_DIR = BASE_DIR / "figures"
 
 
 def main():
-    datasets = load_datasets()
+    datasets = load_datasets_experiment()
 
     config = RandomForestScalingConfig(
         figures_dir=FIGURES_DIR,
@@ -103,7 +103,7 @@ def run_step(plot_name, func, **kwargs):
     return result
 
 
-def load_datasets():# noqa: F811
+def load_datasets():
     datasets = {}
     X, y = load_breast_cancer(return_X_y=True, as_frame=True)
     datasets["Breast_Cancer"] = (X, y, 5, 3000)
