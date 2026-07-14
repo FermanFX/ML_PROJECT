@@ -8,3 +8,4 @@ ruff==0.15.20
 mypy==2.1.0
 ipython==9.4.0
 ucimlrepo==0.0.7
+seaborn==0.13.2
