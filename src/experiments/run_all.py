@@ -106,7 +106,7 @@ def run_step(plot_name, func, **kwargs):
 def load_datasets():
     datasets = {}
     X, y = load_breast_cancer(return_X_y=True, as_frame=True)
-    datasets["Breast_Cancer"] = (X, y, 5, 3000)
+    datasets["Breast_Cancer"] = (X, y, 5, None)
     adult = fetch_ucirepo(id=2)
     X = adult.data.features.copy()
     y = adult.data.targets.copy()
@@ -123,13 +123,13 @@ def load_datasets():
         ]
     )
     y = y["income"].astype(str).str.replace(".", "", regex=False)
-    datasets["Adult_Income"] = (X, y, 10, 3000)
+    datasets["Adult_Income"] = (X, y, 10, None)
     covertype = fetch_ucirepo(id=31)
     X = covertype.data.features.copy()
     y = covertype.data.targets["Cover_Type"]
     X = X.drop(columns=list(X.filter(regex="Wilderness_Area")))
     X = X.drop(columns=list(X.filter(regex="Soil_Type")))
-    datasets["Covertype"] = (X, y, 10, 3000)
+    datasets["Covertype"] = (X, y, 10, None)
 
     X, y = fetch_openml(
         "mnist_784",
@@ -138,7 +138,7 @@ def load_datasets():
         as_frame=False,
         parser="auto",
     )
-    datasets["MNIST"] = (X, y.astype(int), 10, 1000)
+    datasets["MNIST"] = (X, y.astype(int), 10, 3000)
 
     return datasets
 
