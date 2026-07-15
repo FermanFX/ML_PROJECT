@@ -858,10 +858,13 @@ def find_best_dbscan_eps(
         )
 
     rows: list[dict[str, Any]] = []
+    distribution_by_eps: dict[float, dict[int, int]] = {}
 
     for eps in eps_array:
+        eps_value = float(eps)
+
         dbscan = DBSCAN(
-            eps=float(eps),
+            eps=eps_value,
             min_samples=min_samples,
         )
 
@@ -874,9 +877,7 @@ def find_best_dbscan_eps(
             n_clusters,
             noise_fraction,
             cluster_distribution,
-        ) = _get_dbscan_statistics(
-            labels
-        )
+        ) = _get_dbscan_statistics(labels)
 
         ari = float(
             adjusted_rand_score(
@@ -887,22 +888,27 @@ def find_best_dbscan_eps(
 
         rows.append(
             {
-                "eps": float(eps),
+                "eps": eps_value,
                 "clusters": n_clusters,
                 "ARI": ari,
                 "noise_fraction": noise_fraction,
-                "cluster_distribution": cluster_distribution,
             }
         )
 
+        distribution_by_eps[eps_value] = cluster_distribution
+
     results = (
-        pd.DataFrame(rows)
-        .sort_values(
-            by="eps"
+        pd.DataFrame(
+            rows,
+            columns=[
+                "eps",
+                "clusters",
+                "ARI",
+                "noise_fraction",
+            ],
         )
-        .reset_index(
-            drop=True
-        )
+        .sort_values(by="eps")
+        .reset_index(drop=True)
     )
 
     display_columns = [
@@ -952,11 +958,16 @@ def find_best_dbscan_eps(
         "Noise fraction:",
         float(best_row["noise_fraction"]),
     )
+    best_eps_value = float(best_row["eps"])
+    best_cluster_distribution = distribution_by_eps[best_eps_value]
+
     print(
         "Cluster distribution:",
-        best_row["cluster_distribution"],
+        best_cluster_distribution,
     )
+
     return results, best_row
+
 
 def plot_dbscan_best_eps(
     dataset_name: str,
@@ -966,7 +977,11 @@ def plot_dbscan_best_eps(
     min_samples: int = 5,
     max_points: int = 3000,
 ) -> None:
-    
+    """
+    Best eps ilə DBSCAN-i full standardized feature space-də işlədir,
+    nəticəni PCA-nın ilk iki komponentində vizuallaşdırır.
+    """
+
     if best_eps <= 0:
         raise ValueError(
             "best_eps müsbət olmalıdır."
