@@ -6,7 +6,6 @@ import pandas as pd
 from IPython.display import display
 from sklearn.metrics import adjusted_rand_score
 from sklearn.preprocessing import StandardScaler
-
 from src.unsupervised.dbscan import DBSCAN
 from src.unsupervised.kmeans import KMeans
 from src.unsupervised.pca import PCA
@@ -295,7 +294,7 @@ def pca_task(
     dbscan_eps: float,
     dbscan_min_samples: int = 5,
     max_points: int = 5000,
-) -> dict[str, Any]:
+) -> None:
 
     if n_clusters <= 0:
         raise ValueError(
@@ -957,9 +956,7 @@ def find_best_dbscan_eps(
         "Cluster distribution:",
         best_row["cluster_distribution"],
     )
-
     return results, best_row
-
 
 def plot_dbscan_best_eps(
     dataset_name: str,
@@ -968,12 +965,8 @@ def plot_dbscan_best_eps(
     best_eps: float,
     min_samples: int = 5,
     max_points: int = 3000,
-) -> dict[str, Any]:
-    """
-    Best eps ilə DBSCAN-i full standardized feature space-də işlədir,
-    nəticəni PCA-nın ilk iki komponentində vizuallaşdırır.
-    """
-
+) -> None:
+    
     if best_eps <= 0:
         raise ValueError(
             "best_eps müsbət olmalıdır."
