@@ -2375,30 +2375,18 @@ The CI workflow performs:
 6. Pytest execution
 7. Coverage validation
 
+### GitHub Actions CI Pipeline
+
 ```mermaid
 flowchart TD
-    A[Checkout Repository] --> B[Set Up Python 3.12]
-    B --> C[Install Dependencies]
-    C --> D[Ruff Lint]
-    D --> E[Mypy Type Check]
-    E --> F[Pytest]
-    F --> G{Coverage at least 60 percent}
-    G -->|Yes| H[CI Passes]
-    G -->|No| I[CI Fails]
+    A[Checkout Repository] --> B[Install Dependencies]
+    B --> C[Ruff Lint]
+    C --> D[Mypy Type Check]
+    D --> E[Pytest]
+    E --> F{Coverage ≥ 60%?}
+    F -->|Yes| G[✅ PASS]
+    F -->|No| H[❌ FAIL]
 ```
-
-Equivalent local commands:
-
-```bash
-pip install -r requirements.txt
-ruff check .
-mypy src
-pytest tests \
-  --cov=src \
-  --cov-report=term-missing \
-  --cov-fail-under=60
-```
-
 ---
 
 # Reproducibility
