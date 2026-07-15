@@ -1,4 +1,5 @@
-# Ferocious Minsky
+## 🤖 📖 🚀 🧠 💻 AI Project ⚙️ 🗂️ 🧪 🔌 🛠️ 📦 
+## Ferocious Minsky
 
 A from-scratch machine learning library and experimental framework for studying supervised and unsupervised learning algorithms, ensemble methods, model robustness, bias–variance behavior, scalability, and clustering performance.
 
