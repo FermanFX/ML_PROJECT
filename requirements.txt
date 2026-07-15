@@ -9,3 +9,6 @@ mypy==2.1.0
 ipython==9.4.0
 ucimlrepo==0.0.7
 seaborn==0.13.2
+pyarrow==25.0.0
+notebook==7.6.0
+fastparquet==2026.5.0
