@@ -197,6 +197,7 @@ H(\mathbf{x}) = \arg\max_{k} \sum_{m=1}^{M} \alpha_m \cdot \mathbb{I}(h_m(\mathb
 The implementation also supports \texttt{staged\_predict()} for generating predictions after each boosting round without retraining, which is critical for the AdaBoost scaling experiments.
 
 \subsection{Random Forest Classifier}
+
 The Random Forest implementation follows Breiman's bagging framework \cite{breiman2001random}.
 
 \subsubsection{Training Workflow}
@@ -524,10 +525,10 @@ Table~\ref{tab:sensitivity} summarizes the mean degradation across noise levels 
 \toprule
 Data & AB & RF & Sens. \\
 \midrule
-WBCDT    & 0.0653          & 0.0070          & AB \\
-Adult    & 0.0019          & 0.0027          & RF \\
-Cover.   & $-0.0809^{*}$   & $9.8\times10^{-4}$ & RF \\
-MNIST    & 0.0160          & $-0.0087^{*}$   & AB \\
+WBCDT    & 0.0633          & 0.0070          & AB \\
+Adult    & 0.0019          & 0.0083          & RF \\
+Cover.   & $-0.0544^{*}$   & $1.33\times10^{-4}$ & RF \\
+MNIST    & 0.0180          & $-0.0053^{*}$   & AB \\
 \bottomrule
 \multicolumn{4}{@{}l@{}}{\footnotesize $^{*}$Improvement over clean baseline.}
 \end{tabular}
